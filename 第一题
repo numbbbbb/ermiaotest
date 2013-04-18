@@ -1,0 +1,51 @@
+1. 鸸鹋现在注册方式之一是邮箱注册 (http://www.ermiao.com/accounts/register)  这种情况注册后用户暂时没有头像 为了提供更好的体验 我们决定使用gravatar (https://cn.gravatar.com/) 请参照邮箱注册页面 模拟一个注册流程并从gravatar中取头像;
+
+用户模型如下
+User
+id | avatar | email | password | username | created_date
+len(password) >= 6
+
+解决方案：
+使用django
+
+
+from base.models import User 						
+from django.template.loader import get_template    
+from django.shortcuts import render_to_response  	
+from hashlib import md5								
+from datetime import *							
+
+gravatar_url = "http://www.gravatar.com/avatar/"	
+
+def register(request):								
+	new_username = request.POST['username']
+	new_userid = request.POST['userid']
+	new_avatar = md5(request.POST['avatar']).hexdigest()	
+	new_email = request.POST['email']						
+	new_password = md5(request.POST['password'])			
+	new_created_date = date.today() 
+	if len(password)>=6:
+		newuser = User.objects.create(username = new_username,
+										userid = new_userid,
+										avatar = new_avatar,
+										email = new_email,
+										password = new_password,
+										created_date = new_created_date
+										)					
+	else:
+		return render_to_response('wrongpwd.html',locals())		
+	return render_to_response('afterregister.html',locals())	
+
+
+注：
+1、需要在urls.py中导入register函数并添加一行(r'^/accounts/register/$',register),  保证注册页面被路由至register函数处理
+
+
+2、html中使用avatar的方法：
+	a、html模板中添加：
+		<img src="{{ avatar_url }}" />
+	b、views.py中对应函数添加：
+		..省略前后代码..
+		avatar_url = gravatar_url + someuser.avatar
+		..省略前后代码..
+		return render_to_response('someone.html',locals())
